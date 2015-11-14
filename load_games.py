@@ -11,10 +11,26 @@ from bs4 import BeautifulSoup
 wdir = os.path.dirname(os.path.realpath(__file__))
 # pages directory
 pdir = os.path.join(wdir, 'pages')
+# games directory
+gdir = os.path.join(wdir, 'games')
 main_url = 'http://rugame.mobi/game/'
 categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
 
 
+def create_folder(path, remove_file=True):
+    '''Creates directory. If path is a file and remove_file=True than function will
+    remove file and create a directory'''
+    if not os.path.isdir(path):
+        try:
+            os.mkdir(path)
+        except:
+            if remove_file:
+                path = path.rstrip('/')
+                os.remove(path)
+                os.mkdir(path)
+    return 
+
+ 
 def load_pages(category):
     # creating category directory
     catdir = os.path.join(pdir, str(category))
@@ -76,6 +92,19 @@ def load_games_ids(category):
     id_file.close()
     return
 
+def load_games(category):
+    '''load games and info from rugame.mobi'''
+
+    gid_source = os.path.join(pdir, str(category), 'ids.txt')
+
+    with open(gid_source, 'r') as f: 
+        games_id = f.read().split()
+
+    for game_id in games_id:
+        response = urlopen(main_url + game_id)
+        print(response.read())
+        exit()
+    return
     #res = s.find_all('div', attrs={'class': 'play-item'})
     #for song_info in res:
         ## file path
@@ -105,6 +134,7 @@ def load_games_ids(category):
 
 
 def main():
+    load_games(6920)
     exit()
     for cat in categories:
         load_pages(cat)
