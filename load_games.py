@@ -49,7 +49,7 @@ def load_pages(category):
     return
 
 
-def load_games_pages(category):
+def load_games_ids(category):
     '''load games pages from rugame.mobi'''
 
     cat_dir = os.path.join(pdir, str(category))
@@ -75,6 +75,7 @@ def load_games_pages(category):
 
     id_file.close()
     return
+
     #res = s.find_all('div', attrs={'class': 'play-item'})
     #for song_info in res:
         ## file path
@@ -104,11 +105,10 @@ def load_games_pages(category):
 
 
 def main():
-    load_games_pages(6920)
     exit()
     for cat in categories:
-        #load_pages(cat)
-        load_games_pages(cat)
+        load_pages(cat)
+        load_games_ids(cat)
     return
 
 
