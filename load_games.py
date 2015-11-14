@@ -34,9 +34,7 @@ def create_directory(path, remove_file=True):
 def load_pages(category):
     # creating category directory
     catdir = os.path.join(pdir, str(category))
-
-    if not os.path.isdir(catdir):
-        os.mkdir(catdir)
+    create_directory(catdir)
 
     cat_url = main_url + str(category) + '/'
     response = urlopen(cat_url)
@@ -92,53 +90,78 @@ def load_games_ids(category):
     id_file.close()
     return
 
+
+def load_game_file(game_id, game_dir, game_page_path):
+    '''load game file and info from rugame.mobi'''
+
+    with open(game_page_path, 'r') as f:
+        page = f.read()
+
+    #m = re.findall('<font color="#"><hr/></font>((.|[\r\n])*?)<br/><a class="dwn_data" href="/game/(\d*)/', page)
+    m = re.findall('<font color="#"><hr/></font>([\S ]*)\s.*', page)#<br/><a class="dwn_data" href="/game/(\d*)/', page)
+    print(m)
+    exit()
+    for line in m:
+        game_info = line[0]
+        game_link = line[1]
+        #response = urlopen(main_url + game_link)
+        response = U'0x0bb'
+
+        # generating game name
+        game_name = ''
+        for c in game_info:
+            if c in ': ,\\<>/\n':
+                game_name += '_'
+            else:
+                game_name += c
+        game_name += '.jar'
+
+        game_file_path = os.path.join(game_dir, game_name)
+        with open(game_file_path, 'wb') as f:
+            f.write(response.read())
+    return
+
+
 def load_games(category):
     '''load games and info from rugame.mobi'''
 
-    gid_source = os.path.join(pdir, str(category), 'ids.txt')
+    category = str(category)
+    # current category games' directory
+    cat_games_dir = os.path.join(gdir, category)
+    create_directory(cat_games_dir)
+
+    # get games' ids
+    gid_source = os.path.join(pdir, category, 'ids.txt')
 
     with open(gid_source, 'r') as f: 
         games_id = f.read().split()
 
     for game_id in games_id:
         response = urlopen(main_url + game_id)
-        print(response.read())
+
+        # create current game directory
+        game_dir = os.path.join(cat_games_dir, game_id)
+        #if os.path.exists(game_dir):
+            #print('exist')
+            #return
+        #print('lol')
+        #exit()
+        create_directory(game_dir)
+
+        game_page_path = os.path.join(game_dir, 'page.html')
+
+        with open(game_page_path, 'wb') as f:
+            f.write(response.read())
+            load_game_file(game_id, game_dir, game_page_path)
         exit()
     return
-    #res = s.find_all('div', attrs={'class': 'play-item'})
-    #for song_info in res:
-        ## file path
-        #url = song_info.find('span', attrs={'class': 'playicn'})
-        #filename = './fcm/'
-
-        #try:
-            ## add artist's name
-            #artist = song_info.find('span', attrs={'class': 'ptxt-artist'})
-            #filename += artist.a.contents[0]
-
-            ## add song's name and extention
-            #sn = song_info.find('span', attrs={'class': 'ptxt-track'})
-            #filename += ' - ' + str(sn.a.b.contents[0][1:-1]) + '.mp3'
-        #except:
-            #filename += '_' + url.a['href'].split('/')[-1] + '.mp3'
-            #print filename
-
-        #if os.path.exists(filename):
-            #print 'File "' + filename + '" alredy exists!'
-        #else:
-            #print 'Loading "' + filename + '"'
-            #song = urlopen(url.a['href'])
-
-            #with open(filename, 'w') as f:
-                #f.write(song.read())
 
 
 def main():
-    load_games(6920)
-    exit()
     for cat in categories:
-        load_pages(cat)
-        load_games_ids(cat)
+        #load_pages(cat)
+        #load_games_ids(cat)
+        load_games(cat)
     return
 
 
