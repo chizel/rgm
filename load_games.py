@@ -17,7 +17,7 @@ main_url = 'http://rugame.mobi/game/'
 categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
 
 
-def create_folder(path, remove_file=True):
+def create_directory(path, remove_file=True):
     '''Creates directory. If path is a file and remove_file=True than function will
     remove file and create a directory'''
     if not os.path.isdir(path):
