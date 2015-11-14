@@ -52,13 +52,29 @@ def load_pages(category):
 def load_games_pages(category):
     '''load games pages from rugame.mobi'''
 
-    cat_dir = os.path.join(pdir, category)
+    cat_dir = os.path.join(pdir, str(category))
+
+    # get all pages
     pages = os.listdir(cat_dir)
+
+    # file with results
+    id_file_path = os.path.join(cat_dir, 'ids.txt')
+    id_file = open(id_file_path, 'a')
+
     for page in pages:
         page_path = os.path.join(cat_dir, page)
-        with open(page_path, 'r') as f:
-            s = BeautifulSoup(f.read())
 
+        with open(page_path, 'r') as f:
+            s = f.read()
+
+        m = re.findall('[^|]<a href="/game/(\d*)/">', s)
+
+        for game_id in m:
+            id_file.write(game_id)
+            id_file.write(' ')
+
+    id_file.close()
+    return
     #res = s.find_all('div', attrs={'class': 'play-item'})
     #for song_info in res:
         ## file path
@@ -85,7 +101,6 @@ def load_games_pages(category):
 
             #with open(filename, 'w') as f:
                 #f.write(song.read())
-    return
 
 
 def main():
