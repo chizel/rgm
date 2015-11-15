@@ -15,7 +15,7 @@ pdir = os.path.join(wdir, 'pages')
 gdir = os.path.join(wdir, 'games')
 main_url = 'http://rugame.mobi/game/'
 #categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
-categories = [5]
+categories = [7169]
 
 
 def create_directory(path, remove_file=True):
@@ -128,14 +128,15 @@ def load_games(category):
         games_id = f.read().split()
 
     for game_id in games_id:
-        response = urlopen(main_url + game_id)
-
-        # create current game directory
         game_dir = os.path.join(cat_games_dir, game_id)
+
         if os.path.exists(game_dir):
             continue
 
+        # create current game directory
         create_directory(game_dir)
+
+        response = urlopen(main_url + game_id)
         game_page_path = os.path.join(game_dir, 'page.html')
 
         with open(game_page_path, 'wb') as f:

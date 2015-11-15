@@ -4,152 +4,77 @@
 from urllib.request import urlopen
 import re
 import os.path
+import shutil
 from bs4 import BeautifulSoup
 
 
 # work directory
 wdir = os.path.dirname(os.path.realpath(__file__))
-# pages directory
-pdir = os.path.join(wdir, 'pages')
 # games directory
-gdir = os.path.join(wdir, 'games')
-main_url = 'http://rugame.mobi/game/'
+gdir = os.path.join(wdir, 'games/')
 #categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
-categories = [5]
+categories = [6920]
 
 
-def create_directory(path, remove_file=True):
-    '''Creates directory. If path is a file and remove_file=True than function will
-    remove file and create a directory'''
-    if not os.path.isdir(path):
-        try:
-            os.mkdir(path)
-        except:
-            if remove_file:
-                path = path.rstrip('/')
-                os.remove(path)
-                os.mkdir(path)
-    return 
-
- 
-def load_pages(category):
-    # creating category directory
-    catdir = os.path.join(pdir, str(category))
-    create_directory(catdir)
-
-    cat_url = main_url + str(category) + '/'
-    response = urlopen(cat_url)
-
-    # find how much pages does category have
-    first_page = response.read()
-
-    with open(os.path.join(catdir, '1.html'), 'wb') as f:
-        f.write(first_page)
-
-    s = BeautifulSoup(first_page)
-    res = s.find_all('div', attrs={'class': 'page'})
-    s = BeautifulSoup(str(res))
-    res = s.find_all('a')
-    link = str(res[-2])
-    nop = re.search('>(.*)<', link)
-    num_of_pages = int(nop.group(1))
-
-    # load all the pages
-    for i in range(2, num_of_pages + 1):
-        page_path = os.path.join(catdir, str(i) + '.html')
-        url = cat_url + str(i) + '/'
-        response = urlopen(url)
-        with open(page_path, 'wb') as f:
-            f.write(response.read())
-    return
-
-
-def load_games_ids(category):
-    '''load games pages from rugame.mobi'''
-
-    cat_dir = os.path.join(pdir, str(category))
-
-    # get all pages
-    pages = os.listdir(cat_dir)
-
-    # file with results
-    id_file_path = os.path.join(cat_dir, 'ids.txt')
-    id_file = open(id_file_path, 'a')
-
-    for page in pages:
-        page_path = os.path.join(cat_dir, page)
-
-        with open(page_path, 'r') as f:
-            s = f.read()
-
-        m = re.findall('[^|]<a href="/game/(\d*)/">', s)
-
-        for game_id in m:
-            id_file.write(game_id)
-            id_file.write(' ')
-
-    id_file.close()
-    return
-
-
-def load_game_file(game_id, game_dir, game_page_path):
-    '''load game file and info from rugame.mobi'''
-
-    with open(game_page_path, 'r') as f:
-        page = f.read()
-
-    #m = re.findall('<font color="#"><hr/></font>([\S ]*)\s.*', page)#<br/><a class="dwn_data" href="/game/(\d*)/', page)
-    m = re.findall('<a class="dwn_data" href="/game/(\d*)/', page)
-
-    for game_link in m:
-        response = urlopen(main_url + game_link)
-
-        # generating game name
-        game_name = game_link + '.jar'
-
-        game_file_path = os.path.join(game_dir, game_name)
-        with open(game_file_path, 'wb') as f:
-            f.write(response.read())
-    return
-
-
-def load_games(category):
-    '''load games and info from rugame.mobi'''
-
+def parse_games(category):
+    '''rename games files to readable names'''
     category = str(category)
     # current category games' directory
     cat_games_dir = os.path.join(gdir, category)
-    create_directory(cat_games_dir)
 
-    # get games' ids
-    gid_source = os.path.join(pdir, category, 'ids.txt')
+    games_ids = os.listdir(cat_games_dir)
 
-    with open(gid_source, 'r') as f: 
-        games_id = f.read().split()
-
-    for game_id in games_id:
-        response = urlopen(main_url + game_id)
-
-        # create current game directory
+    for game_id in games_ids:
         game_dir = os.path.join(cat_games_dir, game_id)
-        if os.path.exists(game_dir):
+
+        if len(os.listdir(game_dir)) < 2:
             continue
 
-        create_directory(game_dir)
         game_page_path = os.path.join(game_dir, 'page.html')
 
-        with open(game_page_path, 'wb') as f:
-            f.write(response.read())
-            load_game_file(game_id, game_dir, game_page_path)
-        print('Loaded game: ' + game_id)
+        with open(game_page_path, 'r') as f:
+            page = f.read()
+
+        game_name = re.search('<title>(.*) скачать бесплатно на телефон</title>', page)
+        game_name = game_name.group(1)
+        m = re.findall('<font color="#"><hr/></font>([\S\s]*?)<br/><a class="dwn_data" href="/game/(\d*)/', page)
+
+        for l in m:
+            game_file = os.path.join(game_dir, l[1] + '.jar')
+
+            if os.path.exists(game_file):
+                tmp = l[0].replace(',', '_')
+                tmp = tmp.replace('/', '_')
+                old_name = tmp.split()
+
+                if len(old_name) < 4:
+                    new_name = old_name[0] + '_' + old_name[2]
+                else:
+                    new_name = old_name[0] + '_' + old_name[2] + old_name[3]
+
+                    if len(new_name) > 20:
+                        new_name = new_name[:20]
+
+                    new_name = new_name + '_' + old_name[-1] + '.jar'
+                    new_name_path = os.path.join(game_dir, new_name)
+
+                # write game_id to directory for future use
+                with open(os.path.join(game_dir, game_id), 'w') as f:
+                    f.write('')
+
+                # rename gamefile
+                os.rename(game_file, new_name_path)
+            else:
+                print(game_name, game_file)
+        # rename gamedirectory from id to normal name
+        new_game_dir = os.path.join(cat_games_dir, game_name)
+        shutil.move(game_dir, new_game_dir)
     return
 
 
 def main():
     for cat in categories:
-        #load_pages(cat)
-        #load_games_ids(cat)
-        load_games(cat)
+        parse_games(cat)
     return
 
 
