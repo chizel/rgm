@@ -14,7 +14,8 @@ pdir = os.path.join(wdir, 'pages')
 # games directory
 gdir = os.path.join(wdir, 'games')
 main_url = 'http://rugame.mobi/game/'
-categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
+#categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
+categories = [5]
 
 
 def create_directory(path, remove_file=True):
@@ -97,24 +98,14 @@ def load_game_file(game_id, game_dir, game_page_path):
     with open(game_page_path, 'r') as f:
         page = f.read()
 
-    #m = re.findall('<font color="#"><hr/></font>((.|[\r\n])*?)<br/><a class="dwn_data" href="/game/(\d*)/', page)
-    m = re.findall('<font color="#"><hr/></font>([\S ]*)\s.*', page)#<br/><a class="dwn_data" href="/game/(\d*)/', page)
-    print(m)
-    exit()
-    for line in m:
-        game_info = line[0]
-        game_link = line[1]
-        #response = urlopen(main_url + game_link)
-        response = U'0x0bb'
+    #m = re.findall('<font color="#"><hr/></font>([\S ]*)\s.*', page)#<br/><a class="dwn_data" href="/game/(\d*)/', page)
+    m = re.findall('<a class="dwn_data" href="/game/(\d*)/', page)
+
+    for game_link in m:
+        response = urlopen(main_url + game_link)
 
         # generating game name
-        game_name = ''
-        for c in game_info:
-            if c in ': ,\\<>/\n':
-                game_name += '_'
-            else:
-                game_name += c
-        game_name += '.jar'
+        game_name = game_link + '.jar'
 
         game_file_path = os.path.join(game_dir, game_name)
         with open(game_file_path, 'wb') as f:
@@ -141,19 +132,16 @@ def load_games(category):
 
         # create current game directory
         game_dir = os.path.join(cat_games_dir, game_id)
-        #if os.path.exists(game_dir):
-            #print('exist')
-            #return
-        #print('lol')
-        #exit()
-        create_directory(game_dir)
+        if os.path.exists(game_dir):
+            continue
 
+        create_directory(game_dir)
         game_page_path = os.path.join(game_dir, 'page.html')
 
         with open(game_page_path, 'wb') as f:
             f.write(response.read())
             load_game_file(game_id, game_dir, game_page_path)
-        exit()
+        print('Loaded game: ' + game_id)
     return
 
 
