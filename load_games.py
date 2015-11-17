@@ -15,7 +15,7 @@ pdir = os.path.join(wdir, 'pages')
 gdir = os.path.join(wdir, 'games')
 main_url = 'http://rugame.mobi/game/'
 #categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
-categories = [7169]
+categories = [3]
 
 
 def create_directory(path, remove_file=True):
@@ -92,24 +92,39 @@ def load_games_ids(category):
     return
 
 
-def load_game_file(game_id, game_dir, game_page_path):
+def load_game_file(game_id, game_dir, game_page_path, logfile):
     '''load game file and info from rugame.mobi'''
 
     with open(game_page_path, 'r') as f:
         page = f.read()
 
-    #m = re.findall('<font color="#"><hr/></font>([\S ]*)\s.*', page)#<br/><a class="dwn_data" href="/game/(\d*)/', page)
-    m = re.findall('<a class="dwn_data" href="/game/(\d*)/', page)
+    m = re.findall('<a class="dwn_data" href="/game/(\d*)/2/', page)
+
+    # address is not host but ip
+    if not m:
+        m = re.findall('http://[\d.]*/(\d*)/', page)
+        m = set(m)
 
     for game_link in m:
-        response = urlopen(main_url + game_link)
+        try:
+            response = urlopen(main_url + game_link)
+        except:
+            # write error to log-file
+            logfile.write(game_id + ' : ' + main_url + game_link + '\n')
+            continue
 
         # generating game name
         game_name = game_link + '.jar'
 
         game_file_path = os.path.join(game_dir, game_name)
+        cont = response.read()
+
+        if not len(cont):
+            # write error to log-file
+            logfile.write(game_id + ' : ' + main_url + game_link + '\n')
+            continue
         with open(game_file_path, 'wb') as f:
-            f.write(response.read())
+            f.write(cont)
     return
 
 
@@ -121,9 +136,11 @@ def load_games(category):
     cat_games_dir = os.path.join(gdir, category)
     create_directory(cat_games_dir)
 
+    # logfile
+    logfile = open(os.path.join(cat_games_dir, 'log.txt'), 'a')
+
     # get games' ids
     gid_source = os.path.join(pdir, category, 'ids.txt')
-
     with open(gid_source, 'r') as f: 
         games_id = f.read().split()
 
@@ -141,8 +158,9 @@ def load_games(category):
 
         with open(game_page_path, 'wb') as f:
             f.write(response.read())
-            load_game_file(game_id, game_dir, game_page_path)
+            load_game_file(game_id, game_dir, game_page_path, logfile)
         print('Loaded game: ' + game_id)
+    logfile.close()
     return
 
 
