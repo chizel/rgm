@@ -7,15 +7,20 @@ import os.path
 from bs4 import BeautifulSoup
 
 
-# work directory
+# working directory
 wdir = os.path.dirname(os.path.realpath(__file__))
-# pages directory
+
+# directory with pages of list of games
 pdir = os.path.join(wdir, 'pages')
-# games directory
+
+# directory with game files
 gdir = os.path.join(wdir, 'games')
+
 main_url = 'http://rugame.mobi/game/'
+
+# categories id
 #categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
-categories = [3]
+categories = [13]
 
 
 def create_directory(path, remove_file=True):
@@ -33,10 +38,12 @@ def create_directory(path, remove_file=True):
 
  
 def load_pages(category):
+    '''loads pages with list of games links'''
     # creating category directory
     catdir = os.path.join(pdir, str(category))
     create_directory(catdir)
 
+    # category url
     cat_url = main_url + str(category) + '/'
     response = urlopen(cat_url)
 
@@ -49,10 +56,10 @@ def load_pages(category):
     s = BeautifulSoup(first_page)
     res = s.find_all('div', attrs={'class': 'page'})
     s = BeautifulSoup(str(res))
-    res = s.find_all('a')
-    link = str(res[-2])
-    nop = re.search('>(.*)<', link)
-    num_of_pages = int(nop.group(1))
+    links = s.find_all('a')
+    link = str(links[-2])
+    r = re.search('>(.*)<', link)
+    num_of_pages = int(r.group(1))
 
     # load all the pages
     for i in range(2, num_of_pages + 1):
@@ -65,14 +72,14 @@ def load_pages(category):
 
 
 def load_games_ids(category):
-    '''load games pages from rugame.mobi'''
+    '''loads games ids'''
 
     cat_dir = os.path.join(pdir, str(category))
 
     # get all pages
     pages = os.listdir(cat_dir)
 
-    # file with results
+    # write games' ids to the file
     id_file_path = os.path.join(cat_dir, 'ids.txt')
     id_file = open(id_file_path, 'a')
 
@@ -93,14 +100,14 @@ def load_games_ids(category):
 
 
 def load_game_file(game_id, game_dir, game_page_path, logfile):
-    '''load game file and info from rugame.mobi'''
+    '''load game files and game info'''
 
     with open(game_page_path, 'r') as f:
         page = f.read()
 
     m = re.findall('<a class="dwn_data" href="/game/(\d*)/2/', page)
 
-    # address is not host but ip
+    # if address is not host but ip
     if not m:
         m = re.findall('http://[\d.]*/(\d*)/', page)
         m = set(m)
