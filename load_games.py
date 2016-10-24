@@ -34,7 +34,6 @@ def create_directory(path, remove_file=True):
                 path = path.rstrip('/')
                 os.remove(path)
                 os.mkdir(path)
-    return 
 
  
 def load_pages(category):
@@ -68,7 +67,6 @@ def load_pages(category):
         response = urlopen(url)
         with open(page_path, 'wb') as f:
             f.write(response.read())
-    return
 
 
 def load_games_ids(category):
@@ -96,7 +94,6 @@ def load_games_ids(category):
             id_file.write(' ')
 
     id_file.close()
-    return
 
 
 def load_game_file(game_id, game_dir, game_page_path, logfile):
@@ -132,7 +129,6 @@ def load_game_file(game_id, game_dir, game_page_path, logfile):
             continue
         with open(game_file_path, 'wb') as f:
             f.write(cont)
-    return
 
 
 def load_games(category):
@@ -148,6 +144,7 @@ def load_games(category):
 
     # get games' ids
     gid_source = os.path.join(pdir, category, 'ids.txt')
+
     with open(gid_source, 'r') as f: 
         games_id = f.read().split()
 
@@ -168,7 +165,6 @@ def load_games(category):
             load_game_file(game_id, game_dir, game_page_path, logfile)
         print('Loaded game: ' + game_id)
     logfile.close()
-    return
 
 
 def main():
