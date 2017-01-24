@@ -15,8 +15,7 @@ wdir = os.path.dirname(os.path.realpath(__file__))
 gdir = os.path.join(wdir, 'games/')
 
 # games' categories
-#categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
-categories = [3]
+categories = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 6920, 7169, 7135]
 
 
 class MLStripper(HTMLParser):
@@ -147,9 +146,9 @@ def parse_games(category):
 
             # checking is file with this name already exists
             i = 0
-            tmp = ''
+            tmp = new_name_path[:]
 
-            while os.path.exists(new_name_path):
+            while os.path.exists(tmp):
                 # file name without '.jar'
                 tmp = new_name_path[:-4]
                 tmp += '_' 
@@ -157,8 +156,7 @@ def parse_games(category):
                 tmp += '.jar'
                 i += 1
 
-            if tmp:
-                new_name_path = tmp
+            new_name_path = tmp
 
 #CREATE TABLE game_files (game_id INT, width INT, height INT, oldname CHAR, filename CHAR, FOREIGN KEY(game_id) REFERENCES games(id));
             # writing to db
